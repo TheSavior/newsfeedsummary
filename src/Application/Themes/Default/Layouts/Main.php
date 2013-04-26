@@ -37,7 +37,7 @@
         </div>
       </div>
     </div>
-    <!--
+    
     <div id="search" class="container">
       <form action="" method="get">
         <div class="input-append">
@@ -57,7 +57,6 @@
         </button>
       </form>
     </div>
-    -->
 	<?php
     echo $this->content()
     ?>

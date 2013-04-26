@@ -15,8 +15,7 @@ class DataGrabber
     */
     function getData($start, $end) {
 
-        $query = '/me/home?limit=500';
-        //fql?q=SELECT post_id, actor_id, target_id, message FROM stream WHERE filter_key in (SELECT filter_key FROM stream_filter WHERE uid = me() AND type = 'newsfeed')
+        $query = '/me/home?limit=500&since='.$start.'&until='.$end;
 
         $results = json_decode($this->service->request($query))->data;
         $data = array();

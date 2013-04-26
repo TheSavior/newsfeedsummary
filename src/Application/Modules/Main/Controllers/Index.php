@@ -23,10 +23,27 @@ class Index extends \Saros\Application\Controller
         }
     }
 
-	public function indexAction()
+	public function indexAction($start = null, $end = null)
 	{
+        if ($start) {
+            $start = strtotime($start);
+        }
+
+        if ($end) {
+            $end = strtotime($end);
+        }
+
+        if (!$start) {
+            $start = strtotime("1 week ago");
+        }
+
+        if (!$end) {
+            $end = strtotime("now");
+        }
+        
+
         $fbHistory = new \Application\Classes\DataGrabber($this->service);
-        $data = $fbHistory->getData("3 months ago", "now"); // currently doesn't use dates
+        $data = $fbHistory->getData($start, $end); // currently doesn't use dates
         $this->view->Types = $fbHistory->run($data);
 	}
 
