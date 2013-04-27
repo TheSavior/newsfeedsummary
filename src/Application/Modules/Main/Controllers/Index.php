@@ -34,13 +34,13 @@ class Index extends \Saros\Application\Controller
         }
 
         if (!$start) {
-            $start = strtotime("1 week ago");
+            $start = strtotime("24 hours ago");
         }
 
         if (!$end) {
             $end = strtotime("now");
         }
-        
+
 
         $fbHistory = new \Application\Classes\DataGrabber($this->service);
         $data = $fbHistory->getData($start, $end); // currently doesn't use dates

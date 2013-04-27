@@ -58,13 +58,13 @@
           <?php
             foreach ($this->Types['status'] as $status) {
                 //die(var_dump($status["original"]));
-                $userId = $status["original"]->actor_id;
+                $userId = \Application\Classes\Utils::convertId($status["original"]->actor_id);
             ?>
 
               <div class="status">
             <div class="statusContent">
                 <div class="statusTop">
-                  <div class="avatar">
+                  <div class="avatar" data-toggle="tooltip" title="<?=$userId?>">
                     <a href="http://facebook.com/<?=$userId?>">
                       <img src="http://graph.facebook.com/<?=$userId?>/picture" />
                     </a>

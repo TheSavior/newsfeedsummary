@@ -9,10 +9,6 @@ class DataGrabber
         $this->service = $service;
     }
 
-    /*
-     * Next level data function. Terrible comment.
-     * getData("Yesterday at 3pm", "March 12th 2012", "/evanbtcohen/feed");
-    */
     function getData($start, $end) {
         $query = "/fql?q=".urlencode(
 "SELECT type, post_id, attachment, actor_id, target_id, message, comment_info, likes, share_count, created_time
@@ -22,9 +18,7 @@ AND NOT (actor_id IN
     (SELECT target_id FROM connection WHERE target_type='Page' AND source_id = me())
 )
 AND type IN (46, 56, 80, 257)
-AND created_time <= ".$end." AND created_time >= ".$start."
-LIMIT 1000");
-
+AND created_time <= ".$end." AND created_time >= ".$start." LIMIT 500");
 
         $results = json_decode($this->service->request($query))->data;
 
@@ -53,17 +47,19 @@ LIMIT 1000");
                 // it's a photo
                 $types["photos"][] = $item;
             }
-            else if ($ele->message != "" && !property_exists($ele->attachment, "media"))
+            else if (in_array($ele->type, array(46, 80)) && $ele->message != "")
             {
                 $types["statuses"][] = $item;
             }
             else
             {
-                //$this->p_print($ele);
+                //$this->p_print($ele, true);
             }
 
             $stories++;
         }
+
+        //echo count($types["photos"])." photos, ".count($types["statuses"])." statuses, ".$stories." total stories";
 
         $newStories = array(
             "photos" => $this->fixPictures($this->getImportant($types["photos"])),
@@ -71,7 +67,6 @@ LIMIT 1000");
         );
 
         return $newStories;
-
     }
 
     function getImportant($stories) {
@@ -105,7 +100,7 @@ LIMIT 1000");
 
         // Get all the items that are a standard deviation above the average score
         $results = array_filter($popStories, function($item) use ($avg, $stdDev){
-            return $item["score"] > $avg + $stdDev;
+            return $item["score"] > $avg + ($stdDev * .5);
         });
 
         return $results;

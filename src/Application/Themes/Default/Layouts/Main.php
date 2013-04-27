@@ -3,11 +3,11 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Facebook Re-connect</title>
     <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico" />
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script>
     <?php echo $this->headScripts()->appendFile("js/bootstrap.min.js") ?>
     <script type="text/javascript">
     $(function () {
-        $("[data-toggle='tooltip']").tooltip();
+        //$("[data-toggle='tooltip']").tooltip();
     });
 </script>
     <?php echo $this->headStyles()->appendFile("css/bootstrap.css")->appendFile("css/bootstrap.min.css")->appendFile("css/main.css") ?>
@@ -61,8 +61,7 @@
 	<?php
     echo $this->content()
     ?>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script>
-    <script src="js/bootstrap.js"></script>
-    <script src='js/main.js' type='text/javascript'></script>
+
+
 </body>
 </html>

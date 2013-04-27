@@ -93,4 +93,8 @@ class Utils
                 return "";
         }
     }
+
+    public static function convertId($id) {
+        return sprintf('%0.0f',$id);
+    }
 }
