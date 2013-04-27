@@ -14,126 +14,129 @@ class DataGrabber
      * getData("Yesterday at 3pm", "March 12th 2012", "/evanbtcohen/feed");
     */
     function getData($start, $end) {
+        $query = "/fql?q=".urlencode(
+"SELECT type, post_id, attachment, actor_id, target_id, message, comment_info, likes, share_count, created_time
+FROM stream WHERE
+filter_key IN (SELECT filter_key FROM stream_filter WHERE uid = me() AND type = 'newsfeed')
+AND NOT (actor_id IN
+    (SELECT target_id FROM connection WHERE target_type='Page' AND source_id = me())
+)
+AND type IN (46, 56, 80, 257)
+AND created_time <= ".$end." AND created_time >= ".$start."
+LIMIT 1000");
 
-        $query = '/me/home?limit=500&since='.$start.'&until='.$end;
 
         $results = json_decode($this->service->request($query))->data;
-        $data = array();
 
-        foreach($results as $result) {
-            if (property_exists($result->from, "category"))
-                continue;
-
-            $data[] = $result;
-        }
-
-        return $data;
+        return $results;
     }
-
 
     public function run($data) {
 
         $stories = 0;
 
-        $types = array();
+        $types = array("photos" => array(), "statuses" => array());
         $storyArray = array();
 
 
         foreach($data as $ele) {
-
-            $likeCount = 0;
-            if (property_exists($ele, "likes")) {
-                $likeCount = $ele->likes->count;
+            if (!property_exists($ele->likes, "count")) {
+                // For some reason, no like count is given
+                $ele->likes->count = 0;
             }
 
-            $storyArray[] = array("likes" => $likeCount, "original" => $ele);
+            $score = $ele->likes->count + 0.2* $ele->comment_info->comment_count + 2* $ele->share_count;
 
+            $item = array("score" => $score, "original" => $ele);
 
-            if (!isset($types[$ele->type]))
+            if (property_exists($ele->attachment, "media") && isset($ele->attachment->media[0]) && property_exists($ele->attachment->media[0], "photo")) {
+                // it's a photo
+                $types["photos"][] = $item;
+            }
+            else if ($ele->message != "" && !property_exists($ele->attachment, "media"))
             {
-                $types[$ele->type] = 1;
+                $types["statuses"][] = $item;
             }
             else
             {
-                $types[$ele->type]++;
+                //$this->p_print($ele);
             }
 
             $stories++;
         }
 
-        usort($storyArray, function ($a, $b) {
-            return $a["likes"] < $b["likes"];
-        });
-
         $newStories = array(
-            "photos" => $this->getImportant("photo", $storyArray),
-            "status" => $this->getImportant("status", $storyArray),
-            "link" => $this->getImportant("link", $storyArray, 4)
+            "photos" => $this->fixPictures($this->getImportant($types["photos"])),
+            "status" => $this->getImportant($types["statuses"])
         );
 
         return $newStories;
+
     }
 
-    function getImportant($type, $stories, $limit = 0) {
-        $popStories = array_filter($stories, function($item) use ($type, $limit){
-            //die(var_dump($item["original"]->type));
-            return $item["likes"] > 0 && $item["original"]->type == $type;
+    function getImportant($stories) {
+        // Get rid of the ones with a score of zero
+        $popStories = array_filter($stories, function($item) {
+            return $item["score"] > 0;
         });
 
+        // Sort the ones left by their score
+        usort($popStories, function ($a, $b) {
+            return $a["score"] < $b["score"];
+        });
+
+        // If there are no stories, short circuit
         if (count($popStories) == 0) {
             return array();
         }
 
-        if ($limit > 0) {
-            $slice = array_slice($popStories, 0, $limit);
-            if ($type == "photo") {
-                $slice = $this->fixPictures($slice);
-            }
-            return $slice;
-        }
-
-        //die(var_dump(count($popStories)));
-
+        // Get the average score for stories in this category
         $avg = array_reduce($popStories, function($acc, $item) {
-            return $acc + $item["likes"];
+            return $acc + $item["score"];
         }) / count($popStories);
 
-
+        // For each element, get the distance from the average score
         $distFromAvg = array_map(function($item) use ($avg) {
-            $dist = round(pow($item["likes"] - $avg,2));
+            $dist = round(pow($item["score"] - $avg,2));
             return $dist;
         }, $popStories);
 
         $stdDev = sqrt(array_sum($distFromAvg) / count($popStories));
 
+        // Get all the items that are a standard deviation above the average score
         $results = array_filter($popStories, function($item) use ($avg, $stdDev){
-            return $item["likes"] > $avg+$stdDev;
+            return $item["score"] > $avg + $stdDev;
         });
-
-        if ($type == "photo") {
-            $results = $this->fixPictures($results);
-        }
 
         return $results;
     }
 
-    function fixPictures($array) {
-        foreach($array as $photo) {
+    function fixPictures($photos) {
+        foreach($photos as $photo) {
 
             try
             {
-                $photoId = $photo["original"]->object_id;
-                $photos = json_decode($this->service->request("/".$photoId))->images;
-
-                $chosenPhoto = $photos[0];
+                $photoId = $photo["original"]->attachment->media[0]->photo->fbid;
+                $photoId = sprintf('%0.0f',$photoId);
+                $request = json_decode($this->service->request("/".$photoId))->images;
+                //die(var_dump($request));
+                $chosenPhoto = $request[0];
                 $photo["original"]->picture = $chosenPhoto->source;
             }
             catch(\Exception $e) {
-                echo "failed<br />\n";
+                $photo["original"]->picture = $photo["original"]->attachment->media[0]->src;
                 continue;
             }
         }
 
-        return $array;
+        return $photos;
+    }
+
+    function p_print($var, $die=false) {
+        $s = "<pre>".var_export($var, true)."</pre>";
+        if ($die) {
+            die($s);
+        }
+        else echo $s."<br />\n";
     }
 }

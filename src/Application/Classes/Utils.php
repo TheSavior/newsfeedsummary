@@ -20,8 +20,11 @@ class Utils
     */
     public static function formatDate($date)
     {
-        // make an extra variable we will override
-        $date = strtotime($date);
+        if (!is_int($date)) {
+            // If we didn't pass a timestamp, convert it
+            $date = strtotime($date);
+        }
+
         $extra = "";
 
         // Most of this code found on php's date() page by davet15@hotmail.com on 08-Mar-2009 04:13

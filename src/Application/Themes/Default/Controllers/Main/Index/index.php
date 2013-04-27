@@ -7,11 +7,12 @@
           <?php
             $photos = $this->Types['photos'];
             $photo = array_shift($photos);
+            //die(var_dump($photo["original"]->attachment->media[0]->photo->fbid));
           ?>
-          <a href="<?= $photo['original']->link?>">
+          <a href="<?= $photo['original']->attachment->media[0]->href?>">
             <div class="bannerImage">
               <div class="banneroverflowwrapper">
-                <img src="<?= $photo['original']->picture?>" class="largepic" />
+                <img src="<?= $photo["original"]->picture?>" class="largepic" alt="" />
               </div>
               <div class="bottomImage">
                 <div class="caption shiddy">
@@ -20,25 +21,25 @@
                   <?php endif; ?>
                 </div>
                 <div class="statusnums">
-                  <img src="<?= $GLOBALS['registry']->config["siteUrl"] ?>img/facebook-thumbs-up.png" />
-                  <span class="likes shiddy"><?= $photo['likes'] ?></span>
+                  <span class="likes shiddy"><?= $photo['original']->likes->count ?></span>
+                    <span class="comments shiddy"><?= $photo['original']->comment_info->comment_count ?></span>
                 </div>
               </div>
-            </a>
-          </div>
+            </div>
+          </a>
 
           <div class="smallImages">
             <?php
             foreach ($photos as $photo) { ?>
-            <a href="<?= $photo['original']->link?>">
+            <a href="<?= $photo['original']->attachment->media[0]->href?>">
               <div class="thumbwrapper">
                 <div class="thumboverflowwrapper">
-                  <img src="<?= $photo['original']->picture?>" class="thumb" />
+                  <img src="<?= $photo["original"]->picture?>" class="thumb" />
                 </div>
                 <div class="bottomImage">
                   <div class="statusnums">
-                    <img src="<?= $GLOBALS['registry']->config["siteUrl"] ?>img/facebook-thumbs-up.png" />
-                    <span class="likes shiddy"><?= $photo['likes'] ?></span>
+                    <span class="likes shiddy"><?= $photo['original']->likes->count ?></span>
+                    <span class="comments shiddy"><?= $photo['original']->comment_info->comment_count ?></span>
                   </div>
                 </div>
               </div>
@@ -50,12 +51,14 @@
 
         </div>
       </div>
+
       <!-- Status feeds -->
       <div class="span4">
           <div class="statuses">
           <?php
             foreach ($this->Types['status'] as $status) {
-                $userId = $status["original"]->from->id;
+                //die(var_dump($status["original"]));
+                $userId = $status["original"]->actor_id;
             ?>
 
               <div class="status">
@@ -66,7 +69,7 @@
                       <img src="http://graph.facebook.com/<?=$userId?>/picture" />
                     </a>
                   </div>
-                  <a href="http://facebook.com/<?=$status["original"]->id?>">
+                  <a href="http://facebook.com/<?=$status["original"]->post_id?>">
                     <p><?=$status["original"]->message ?></p>
                   </a>
                 </div>
@@ -75,8 +78,8 @@
                   <span><?= \Application\Classes\Utils::formatDate($status['original']->created_time) ?></span>
                 </div>
                 <div class="statusnums">
-                  <img src="<?= $GLOBALS['registry']->config["siteUrl"] ?>img/facebook-thumbs-up.png" >
-                  <?= $status['likes'] ?>
+                    <span class="likes"><?= $status["original"]->likes->count ?></span>
+                    <span class="comments"><?= $status['original']->comment_info->comment_count ?></span>
                 </div>
               </div>
             </div>

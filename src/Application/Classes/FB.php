@@ -41,7 +41,7 @@ class FB
             $storageAdapter = new \OAuth\Common\Storage\Session();
         }
 
-        $this->service = $factory->createService('facebook', $credentials, $storageAdapter);
+        $this->service = $factory->createService('facebook', $credentials, $storageAdapter, ["read_stream", "user_activities", "user_checkins", "user_photos", "user_status", "user_videos"]);
     }
 
     public function isAuthorized() {
